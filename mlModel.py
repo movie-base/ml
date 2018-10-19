@@ -47,7 +47,7 @@ def loadMovieStats(filename):
 """
 	writeMovieStats takes in a filename and writes stats into the corresponding file.
 """
-def writeMovieStats(filename):
+def writeMovieStats(filename, movieStats):
 	f = open(filename, "w+")
 	for movieStat, value in movieStats.items():
 		f.write(movieStat + ":" + str(value) + "\n")
@@ -264,7 +264,7 @@ def predictIfUserLikesMovies(userId, movieIds, premadeClassifier=None, premadeMo
 		encodedLikedList = convertBooleanListToIntList(hasLikedList)
 
 		# Create new file to hold stats for future use and dump stats in file.
-		writeMovieStats("./models/" + userId + "-stats")
+		writeMovieStats("./models/" + userId + "-stats", movieStats)
 
 		# Create new file to hold classifier for future use and dump classifier in file.
 		filename = "./models/" + userId
@@ -273,8 +273,8 @@ def predictIfUserLikesMovies(userId, movieIds, premadeClassifier=None, premadeMo
 
 		classifier = KNeighborsClassifier()
 		classifier.fit(encodedWatchedMoviesList, encodedLikedList) 
-		print watchedMovieIds
-		print encodedLikedList
+		# print watchedMovieIds
+		# print encodedLikedList
 		joblib.dump(classifier, filename) 
 
 	# Format toWatchMovieList for prediction.
