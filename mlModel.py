@@ -16,20 +16,28 @@ TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjViYzEzOGE5MTdjOTViMDhiZj
 	INTERACTIONS_API_ENDPOINT. A dictionary containing all of the user interactions is returned.
 """
 def getInteractions(userId):
-	return requests.get(
+	response = requests.get(
 		INTERACTIONS_API_ENDPOINT + "/" + userId,
 		headers = {"Authorization":"Bearer " + TOKEN},
-	).json()
+	)
+	interaction = None
+	if response.status_code < 400:
+		interaction = response.json()
+	return interaction
 
 """
 	getMovie takes in a movieId and obtains movie details from the MOVIES_API_ENDPOINT. 
 	A dictionary containing movie details is returned.
 """
 def getMovie(movieId):
-	return requests.get(
+	response = requests.get(
 		MOVIES_API_ENDPOINT + "/" + movieId,
 		headers = {"Authorization":"Bearer " + TOKEN},
-	).json()
+	)
+	movie = None
+	if response.status_code < 400:
+		movie = response.json()
+	return movie
 
 """
 	loadMovieStats takes in a filename and loads stats into a dictionary.
@@ -237,21 +245,20 @@ def predictIfUserLikesMovies(userId, movieIds, premadeClassifier=None, premadeMo
 	else:
 		# Generate formatted lists of watchedMovies and hasLiked variables
 		interactions = getInteractions(userId)
-		watchedMovieIds = [
-			interaction["movie"]
-			for interaction in interactions
-			if interaction["hasWatched"] == True
-		]
-		hasLikedList = [
-			interaction["hasLiked"]
-			for interaction in interactions
-			if interaction["hasWatched"] == True
+		interactions = [
+			interaction for interaction in interactions
+			if interaction is not None
 		]
 
-		watchedMoviesList = [ 
-			getMovie(watchedMovieId)
-			for watchedMovieId in watchedMovieIds
-		]
+		watchedMoviesList = []
+		hasLikedList = []
+		for interaction in interactions:
+			if "hasWatched" in interaction and interaction["hasWatched"] == True:
+				movieId = interaction["movie"]
+				movie = getMovie(movieId)
+				if movie is not None:
+					watchedMoviesList.append(movie)
+					hasLikedList.append(interaction["hasLiked"])
 
 		movieStats = getMovieStats(watchedMoviesList)
 		formattedWatchedMoviesList = [
@@ -291,11 +298,6 @@ def predictIfUserLikesMovies(userId, movieIds, premadeClassifier=None, premadeMo
 	# Perform predictions and convert back numerical encoded likedList to boolean values.
 	predictions = classifier.predict(encodedToWatchMoviesList)
 	return convertIntListToBooleanList(predictions)
-
-
-
-
-
 
 
 
